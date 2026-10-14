@@ -9,6 +9,7 @@ type Img = {
   name: string;
   thumb: string; // data URL (or emoji for demo)
   data?: string; // base64 JPEG sent to the API
+  small?: string; // 512px base64 JPEG for the visual grouping check
   status: "ready" | "analyzing" | "done" | "error";
   analysis?: ImageAnalysis;
   error?: string;
@@ -22,7 +23,7 @@ type Phase = "idle" | "analyzing" | "grouping" | "researching" | "done";
 const gbp = (n: number) =>
   "£" + n.toLocaleString("en-GB", { maximumFractionDigits: n < 100 ? 2 : 0 });
 
-async function fileToJpeg(file: File, maxSide = 1280): Promise<{ thumb: string; data: string }> {
+async function fileToJpeg(file: File, maxSide = 1280): Promise<{ thumb: string; data: string; small: string }> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
@@ -30,7 +31,12 @@ async function fileToJpeg(file: File, maxSide = 1280): Promise<{ thumb: string; 
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   const url = canvas.toDataURL("image/jpeg", 0.82);
-  return { thumb: url, data: url.split(",")[1] };
+  const s = Math.min(1, 512 / Math.max(canvas.width, canvas.height));
+  const small = document.createElement("canvas");
+  small.width = Math.round(canvas.width * s);
+  small.height = Math.round(canvas.height * s);
+  small.getContext("2d")!.drawImage(canvas, 0, 0, small.width, small.height);
+  return { thumb: url, data: url.split(",")[1], small: small.toDataURL("image/jpeg", 0.75).split(",")[1] };
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
@@ -61,6 +67,7 @@ export default function TeardownApp() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [notices, setNotices] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const patchImage = (id: string, patch: Partial<Img>) =>
@@ -71,8 +78,8 @@ export default function TeardownApp() {
     for (const file of list) {
       const id = crypto.randomUUID();
       try {
-        const { thumb, data } = await fileToJpeg(file);
-        setImages((prev) => [...prev.filter((p) => !p.demo), { id, name: file.name, thumb, data, status: "ready" }]);
+        const { thumb, data, small } = await fileToJpeg(file);
+        setImages((prev) => [...prev.filter((p) => !p.demo), { id, name: file.name, thumb, data, small, status: "ready" }]);
       } catch {
         setNotices((n) => [...n, `Couldn't read ${file.name} (HEIC? try exporting as JPEG)`]);
       }
@@ -86,6 +93,7 @@ export default function TeardownApp() {
     setPhase("idle");
     setNotices([]);
     setGroupMethod("");
+    setSelected([]);
   };
 
   const runTeardown = async (group: ProductGroup) => {
@@ -112,10 +120,10 @@ export default function TeardownApp() {
 
     // 1. Analyze each photo (3 at a time); failures stay visible and are skipped.
     setPhase("analyzing");
-    const analyzed: { imageId: string; analysis: ImageAnalysis }[] = [];
+    const analyzed: { imageId: string; analysis: ImageAnalysis; thumb?: string }[] = [];
     await pool(todo, 3, async (im) => {
       if (im.analysis) {
-        analyzed.push({ imageId: im.id, analysis: im.analysis });
+        analyzed.push({ imageId: im.id, analysis: im.analysis, thumb: im.small });
         return;
       }
       patchImage(im.id, { status: "analyzing", error: undefined });
@@ -125,7 +133,7 @@ export default function TeardownApp() {
           data: im.data,
         });
         patchImage(im.id, { status: "done", analysis });
-        analyzed.push({ imageId: im.id, analysis });
+        analyzed.push({ imageId: im.id, analysis, thumb: im.small });
       } catch (err) {
         patchImage(im.id, { status: "error", error: String(err) });
       }
@@ -140,12 +148,12 @@ export default function TeardownApp() {
     setPhase("grouping");
     let productGroups: ProductGroup[];
     try {
-      const res = await postJson<{ groups: ProductGroup[]; method: string; warnings: string[] }>("/api/group", {
+      const res = await postJson<{ groups: ProductGroup[]; method: string; visualCheck: boolean; warnings: string[] }>("/api/group", {
         batchId: crypto.randomUUID(),
         items: analyzed,
       });
       productGroups = res.groups;
-      setGroupMethod(res.method);
+      setGroupMethod(res.method + (res.visualCheck ? "+visual" : ""));
       if (res.warnings.length) setNotices((n) => [...n, ...res.warnings]);
     } catch (err) {
       setNotices((n) => [...n, `Grouping failed, treating each photo separately: ${err}`]);
@@ -158,6 +166,35 @@ export default function TeardownApp() {
     setPhase("researching");
     await Promise.all(productGroups.map(runTeardown));
     setPhase("done");
+  };
+
+  // Manual override: combine products the auto-dedupe kept apart, then re-run the teardown.
+  const mergeSelected = () => {
+    const picked = groups.filter((g) => selected.includes(g.groupId));
+    if (picked.length < 2) return;
+    const rank = { high: 3, medium: 2, low: 1 } as const;
+    const best = [...picked].sort((a, b) => rank[b.confidence] - rank[a.confidence] || b.imageIds.length - a.imageIds.length)[0];
+    const merged: ProductGroup = {
+      ...best,
+      groupId: `merged-${crypto.randomUUID()}`,
+      imageIds: picked.flatMap((g) => g.imageIds),
+      is_known_product: picked.some((g) => g.is_known_product) && best.is_known_product,
+      visible_components: [...new Set(picked.flatMap((g) => g.visible_components))].slice(0, 20),
+      description: picked.map((g) => g.description).join(" "),
+    };
+    const firstIdx = groups.findIndex((g) => selected.includes(g.groupId));
+    const next = groups.filter((g) => !selected.includes(g.groupId));
+    next.splice(firstIdx, 0, merged);
+    setGroups(next);
+    setTeardowns((t) => Object.fromEntries(Object.entries(t).filter(([k]) => !selected.includes(k))));
+    setSelected([]);
+    setGroupMethod((m) => (m.includes("manual") ? m : m + "+manual"));
+    if (!groupMethod.startsWith("demo")) runTeardown(merged);
+    else
+      setTeardowns((t) => ({
+        ...t,
+        [merged.groupId]: { status: "error", error: "Demo data can't be re-merged. Run live to merge." },
+      }));
   };
 
   const loadDemo = () => {
@@ -252,15 +289,39 @@ export default function TeardownApp() {
       {/* 2. Merges */}
       {groups.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-neutral-500">
-            Deduplication{" "}
-            <span className="normal-case tracking-normal text-neutral-600">
-              · {methodLabel(groupMethod)}
-            </span>
-          </h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-neutral-500">
+              Deduplication{" "}
+              <span className="normal-case tracking-normal text-neutral-600">· {methodLabel(groupMethod)}</span>
+            </h2>
+            {groups.length > 1 && !busy && (
+              <button
+                onClick={mergeSelected}
+                disabled={selected.length < 2}
+                className="rounded-lg border border-emerald-500/40 px-3 py-1.5 text-xs text-emerald-300 hover:bg-emerald-500/10 disabled:border-neutral-800 disabled:text-neutral-600"
+              >
+                {selected.length < 2 ? "Tick 2+ products to merge them" : `Merge ${selected.length} into one product`}
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-3">
             {groups.map((g) => (
-              <div key={g.groupId} className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900/50 px-3 py-2">
+              <label
+                key={g.groupId}
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 ${
+                  selected.includes(g.groupId) ? "border-emerald-500/60 bg-emerald-500/5" : "border-neutral-800 bg-neutral-900/50"
+                }`}
+              >
+                {groups.length > 1 && !busy && (
+                  <input
+                    type="checkbox"
+                    className="accent-emerald-500"
+                    checked={selected.includes(g.groupId)}
+                    onChange={(e) =>
+                      setSelected((sel) => (e.target.checked ? [...sel, g.groupId] : sel.filter((x) => x !== g.groupId)))
+                    }
+                  />
+                )}
                 <div className="flex -space-x-3">
                   {g.imageIds.slice(0, 4).map((id) => {
                     const im = imgById(id);
@@ -273,7 +334,7 @@ export default function TeardownApp() {
                   </span>
                   <div className="text-neutral-300">{g.product_guess}</div>
                 </div>
-              </div>
+              </label>
             ))}
           </div>
         </section>
@@ -290,11 +351,16 @@ export default function TeardownApp() {
 }
 
 function methodLabel(m: string) {
-  if (m === "vector-search") return "Atlas Vector Search, cosine ≥ 0.9";
-  if (m === "local-cosine") return "embedding cosine ≥ 0.9 (vector index warming up)";
-  if (m === "name-match") return "product-name match (embeddings unavailable)";
-  if (m === "demo") return "demo data";
-  return "not grouped";
+  const [base, ...extras] = m.split("+");
+  const label =
+    base === "vector-search" ? "Atlas Vector Search, cosine ≥ 0.9"
+    : base === "local-cosine" ? "embedding cosine ≥ 0.9 (vector index warming up)"
+    : base === "name-match" ? "product-name match (embeddings unavailable)"
+    : base === "demo" ? "demo data"
+    : "not grouped";
+  return [label, extras.includes("visual") && "Claude visual check", extras.includes("manual") && "manual merge"]
+    .filter(Boolean)
+    .join(" + ");
 }
 
 function PhaseBar({ phase, images }: { phase: Phase; images: Img[] }) {

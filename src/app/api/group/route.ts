@@ -1,6 +1,7 @@
 import { cosineSimilarity } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { claudeJson } from "@/lib/claude";
 import { embedTexts } from "@/lib/embed";
 import { ensureIndexes, getDb, VEC_INDEX } from "@/lib/db";
 import { ImageAnalysis, type ProductGroup } from "@/lib/schemas";
@@ -11,8 +12,22 @@ const SIM_THRESHOLD = 0.9;
 
 const Body = z.object({
   batchId: z.string().min(1),
-  items: z.array(z.object({ imageId: z.string(), analysis: ImageAnalysis })).min(1).max(30),
+  items: z
+    .array(z.object({ imageId: z.string(), analysis: ImageAnalysis, thumb: z.string().optional() }))
+    .min(1)
+    .max(30),
 });
+
+const MAX_VISUAL = 12;
+
+const VisualGroups = z.object({
+  groups: z.array(z.object({ photos: z.array(z.number()), product_name: z.string() })),
+});
+
+const VISUAL_SYSTEM = `You group photos by the physical object they show, for a hardware teardown tool.
+Photos of the SAME object from different angles, distances, lighting, or close-ups of one part of it belong in ONE group.
+Only separate photos that clearly show different objects (different product, or a different unit/build).
+Every photo number appears in exactly one group. product_name: the most specific name for that object.`;
 
 const embedText = (a: ImageAnalysis) => `Product: ${a.product_guess}. ${a.description}`;
 
@@ -74,7 +89,32 @@ export async function POST(req: Request) {
         if (norm(items[i].analysis.product_guess) === norm(items[j].analysis.product_guess)) pairs[i].push(j);
   }
 
-  // Union-find over similarity edges.
+  // Visual check: Claude sees all photos at once and clusters them by physical object.
+  // Catches different angles / close-ups whose text descriptions embed far apart.
+  const visualName = new Map<number, string>();
+  let visualCheck = false;
+  if (items.length > 1 && items.length <= MAX_VISUAL && items.every((i) => i.thumb)) {
+    try {
+      const hints = items.map((it, i) => `Photo ${i + 1}: ${it.analysis.product_guess}`).join("\n");
+      const res = await claudeJson({
+        schema: VisualGroups,
+        system: VISUAL_SYSTEM,
+        prompt: `The ${items.length} photos above are numbered 1-${items.length} in order.\nEarlier per-photo guesses:\n${hints}\n\nGroup them.`,
+        images: items.map((it) => ({ mediaType: "image/jpeg" as const, data: it.thumb! })),
+        effort: "medium",
+      });
+      for (const g of res.groups) {
+        const idx = [...new Set(g.photos.map((n) => n - 1))].filter((i) => i >= 0 && i < items.length);
+        idx.forEach((i) => visualName.set(i, g.product_name));
+        for (let k = 1; k < idx.length; k++) pairs[idx[0]].push(idx[k]);
+      }
+      visualCheck = true;
+    } catch (err) {
+      warnings.push(`Visual grouping check failed, using similarity only: ${String(err)}`);
+    }
+  }
+
+  // Union-find over similarity + visual edges.
   const parent = items.map((_, i) => i);
   const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
   pairs.forEach((js, i) => js.forEach((j) => (parent[find(i)] = find(j))));
@@ -88,18 +128,19 @@ export async function POST(req: Request) {
       .map((i) => items[i].analysis)
       .sort((a, b) => rank[b.confidence] - rank[a.confidence])[0];
     const components = [...new Set(idx.flatMap((i) => items[i].analysis.visible_components))];
+    const merged = idx.length > 1 && visualName.has(idx[0]);
     return {
       groupId: `${batchId}-${g}`,
       imageIds: idx.map((i) => items[i].imageId),
-      product_guess: best.product_guess,
+      product_guess: merged ? visualName.get(idx[0])! : best.product_guess,
       is_known_product: best.is_known_product,
       confidence: best.confidence,
       visible_components: components.slice(0, 15),
-      description: best.description,
+      description: idx.length > 1 ? idx.map((i) => items[i].analysis.description).join(" ") : best.description,
     };
   });
 
-  return NextResponse.json({ groups, method, threshold: SIM_THRESHOLD, warnings });
+  return NextResponse.json({ groups, method, visualCheck, threshold: SIM_THRESHOLD, warnings });
 }
 
 type Hit = { imageId: string; score: number };
