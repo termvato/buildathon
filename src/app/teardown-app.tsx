@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import BuySection from "./buy-section";
 import { demoProducts } from "@/lib/demo";
 import type { Assembly, Confidence, ImageAnalysis, Offers, Product, Teardown } from "@/lib/schemas";
@@ -169,6 +169,15 @@ export default function TeardownApp() {
     setAssembly({ status: "done", value: d.teardown.assembly });
     setOffers(d.offers ? { status: "done", value: d.offers } : idle);
   };
+
+  // Deep link: /?demo=robot opens a demo directly (handy for sharing and screenshots).
+  useEffect(() => {
+    const key = new URLSearchParams(window.location.search).get("demo");
+    if (!key || !demoProducts.some((d) => d.key === key)) return;
+    const timer = setTimeout(() => loadDemo(key));
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const realCount = photos.filter((p) => !p.demo).length;
   const product = identify.value;
