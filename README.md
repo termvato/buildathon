@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Teardown
 
-## Getting Started
+**Photos of any hardware in → bill of materials, build cost, where to buy every part, and how it fits together out.**
 
-First, run the development server:
+Snap a few phone photos of a gadget or a prototype. Teardown identifies it, researches what it's made of, prices every part with a real quantity basis (unit price, MOQ, price breaks), finds live supplier listings, works out the cheapest basket including shipping, and explains how to put it together.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**Live:** https://buildathon-xi-plum.vercel.app · **Instant demo (no upload):** [?demo=robot](https://buildathon-xi-plum.vercel.app/?demo=robot)
+
+![Teardown: hopping robot prototype](docs/screenshot.png)
+
+Built in one evening at the London Buildathon (MongoDB × Vercel × Tavily).
+
+## What it does
+
+| Step | What happens | Powered by |
+|---|---|---|
+| **Identify** | All photos go to Claude in one call; it reads chip markings and connectors and returns a structured product + component list | Claude Sonnet 5.5 (vision, structured outputs) |
+| **Research + BOM** | Searches teardowns / BOM articles (known products) or each visible component (prototypes); Claude builds the BOM with qty, unit price, MOQ and a price-basis note per line | Tavily + Claude |
+| **Where to buy** | Searches UK/maker shops per part, extracts real listings (price, pack size, price breaks, stock) and per-supplier shipping | Tavily + Claude |
+| **Cost at volume** | Per-unit parts cost at ×1 / ×10 / ×100 / ×1k with MOQs and price breaks spread across the run | `lib/pricing.ts` |
+| **Cheapest basket** | Exhaustive search over supplier combinations, incl. shipping and free-delivery thresholds; CSV shopping list | `lib/pricing.ts` |
+| **How it fits together** | Fitting parts (screws, connectors, wire…), build steps, suggested tools, power/data/signal/mechanical connections, missing parts, risks | Claude (vision + BOM) |
+| **Similar products** | Every teardown is stored with an embedding; Atlas Vector Search + a shared-parts query surface related teardowns | MongoDB Atlas Vector Search |
+
+### Trust, not vibes
+
+- **No invented links.** Every source or listing URL must appear in the search results Claude was given; anything else is dropped (and counted in a warning).
+- **Model reads, code adds up.** Line totals, per-unit vs first-build cost, margins, the volume curve and the basket are all computed in TypeScript, not by the model.
+- **Estimates are labelled.** Lines without a source show `est`; BOM confidence drops to *low* when sources don't support the numbers.
+- **Partial results.** Each stage fails independently with its own retry; the BOM shows before sourcing and reasoning finish.
+- **Fast demos.** Tavily results are cached in MongoDB, and the demo buttons replay a recorded live run fully offline.
+
+## Architecture
+
+```
+Browser (Next.js client)
+  ├─ POST /api/analyze   photos → product + components           Claude vision
+  ├─ POST /api/teardown  product → BOM, totals, similar, stored   Tavily → Claude → MongoDB ($vectorSearch)
+  ├─ POST /api/offers    BOM → listings + shipping                Tavily → Claude          ┐ in parallel
+  └─ POST /api/assembly  BOM + photos → fitting parts, steps…     Claude vision            ┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Claude** is called through the official `@anthropic-ai/sdk` (`messages.parse` + Zod structured outputs). With `ANTHROPIC_API_KEY` set it talks to Anthropic directly; otherwise it is routed through **Vercel AI Gateway** (auth via Vercel OIDC on deploy). See `src/lib/claude.ts`.
+- **Embeddings:** `openai/text-embedding-3-small` (1536-d) via Vercel AI Gateway.
+- **MongoDB Atlas** collections: `teardowns` (documents + `embedding`, vector index `vec_idx`), `tavily_cache` (unique on query). Indexes are created on first use (`src/lib/db.ts`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run it locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm install
+cp .env.example .env.local   # then fill in the values below
+pnpm dev
+```
 
-## Learn More
+| Variable | Needed for |
+|---|---|
+| `MONGODB_URI` | Storage, cache, similar products. Free Atlas M0 works. |
+| `TAVILY_API_KEY` | Web research. Optional: without it the SDK runs in keyless mode (shared rate limit). |
+| `ANTHROPIC_API_KEY` | Optional: direct Anthropic access. Otherwise use Vercel AI Gateway: `vercel link && vercel env pull` (OIDC token) or set `AI_GATEWAY_API_KEY`. |
 
-To learn more about Next.js, take a look at the following resources:
+Atlas: allow your IP (or `0.0.0.0/0` for Vercel) under Network Access. The vector index is created automatically; for reference its definition is:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```json
+{
+  "fields": [
+    { "type": "vector", "path": "embedding", "numDimensions": 1536, "similarity": "cosine" },
+    { "type": "filter", "path": "batchId" }
+  ]
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm test    # pricing / MOQ / basket optimiser unit tests (vitest)
+pnpm lint
+```
 
-## Deploy on Vercel
+## Limitations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Prices are estimates unless a line links to a source; shipping and delivery times are typical figures, not quotes.
+- Parts with generic names (clone internals, custom PCBs, printed parts) rarely have listings and fall back to estimates.
+- A full run makes ~4 model calls and ~10–20 searches; the public demo spends real credits.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Licence
+
+MIT
