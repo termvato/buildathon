@@ -1,0 +1,836 @@
+{
+ "product": {
+  "product_guess": "DIY single-legged hopping robot with spring-loaded leg and 3D-printed frame",
+  "is_known_product": false,
+  "confidence": "medium",
+  "visible_components": [
+   "3D-printed dark gray gears",
+   "3D-printed linkage arms with spherical tips",
+   "coil spring on a vertical rod",
+   "extension spring",
+   "green custom PCB",
+   "9V battery",
+   "brass gear motor",
+   "colored ribbon wiring harness",
+   "red and black power wires",
+   "3D-printed frame/chassis",
+   "rubber foot",
+   "SG92R micro servo",
+   "N20 micro gear motor with magnetic encoder",
+   "brass micro gear motor",
+   "3D-printed nylon (SLS) bracket",
+   "3D-printed spur gears",
+   "curved gear rack segment",
+   "green perfboard/PCB",
+   "JST-SH connector",
+   "twisted multicolor wiring harness"
+  ],
+  "description": "A hand-built, 3D-printed mechanical robot with a gear train and a long vertical spring-loaded leg, plus two V-shaped linkage arms ending in ball tips. A green circuit board and a 9V battery are mounted on one side and wired to the motor, suggesting a jumping or hopping prototype. A DIY robotic mechanism built around a gray 3D-printed C-shaped frame holding an SG92R micro servo, N20 gear motors with encoder boards, and large printed spur gears meshing with a curved rack. It is wired with twisted multicolor cables and mounted on a spring-loaded threaded rod, with a green prototype PCB at one side. A hand-built robot with a 3D-printed dark frame, a custom green PCB carrying a Teensy and two motor driver boards, and a long spring-wrapped vertical leg ending in a round foot. Two splayed 3D-printed arms with rounded tips extend outward, and a cylindrical battery pack is mounted on the left side with loose wiring throughout."
+ },
+ "teardown": {
+  "product": "DIY single-legged hopping robot with spring-loaded leg and 3D-printed frame",
+  "is_known_product": false,
+  "bom": [
+   {
+    "part": "Teensy 4.0/4.1 microcontroller",
+    "supplier": "The Pi Hut / PJRC",
+    "qty": 1,
+    "unit_cost_gbp": 28,
+    "moq": null,
+    "price_basis": "~\u00a328 single unit (Teensy 4.1 class), UK hobby retailer, estimate",
+    "source_url": null,
+    "line_cost_gbp": 28,
+    "first_order_gbp": 28
+   },
+   {
+    "part": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
+    "supplier": "JLCPCB",
+    "qty": 1,
+    "unit_cost_gbp": 1.2,
+    "moq": 5,
+    "price_basis": "~\u00a36 for 5 boards (2-layer, JLCPCB), est. per-piece",
+    "source_url": null,
+    "line_cost_gbp": 1.2,
+    "first_order_gbp": 6
+   },
+   {
+    "part": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+    "supplier": "Pimoroni / AliExpress",
+    "qty": 2,
+    "unit_cost_gbp": 5,
+    "moq": null,
+    "price_basis": "~\u00a35 each single unit, estimate",
+    "source_url": null,
+    "line_cost_gbp": 10,
+    "first_order_gbp": 10
+   },
+   {
+    "part": "N20 gear motor with magnetic encoder",
+    "supplier": "Pimoroni / Pololu",
+    "qty": 2,
+    "unit_cost_gbp": 14,
+    "moq": null,
+    "price_basis": "~\u00a314 each single unit incl. encoder, estimate",
+    "source_url": null,
+    "line_cost_gbp": 28,
+    "first_order_gbp": 28
+   },
+   {
+    "part": "Brass micro gear motor",
+    "supplier": "Pololu / AliExpress",
+    "qty": 1,
+    "unit_cost_gbp": 12,
+    "moq": null,
+    "price_basis": "~\u00a312 single unit, estimate",
+    "source_url": null,
+    "line_cost_gbp": 12,
+    "first_order_gbp": 12
+   },
+   {
+    "part": "SG92R micro servo",
+    "supplier": "The Pi Hut",
+    "qty": 1,
+    "unit_cost_gbp": 4,
+    "moq": null,
+    "price_basis": "~\u00a34 single unit, estimate",
+    "source_url": null,
+    "line_cost_gbp": 4,
+    "first_order_gbp": 4
+   },
+   {
+    "part": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
+    "supplier": "Self-printed / JLC3DP",
+    "qty": 1,
+    "unit_cost_gbp": 18,
+    "moq": null,
+    "price_basis": "est. ~\u00a318 total filament or service cost for the printed set; JLC3DP FDM from $1 per part and SLS nylon higher",
+    "source_url": "https://jlc3dp.com",
+    "line_cost_gbp": 18,
+    "first_order_gbp": 18
+   },
+   {
+    "part": "Coil compression spring + extension spring",
+    "supplier": "RS / Ashfield Springs stock",
+    "qty": 2,
+    "unit_cost_gbp": 2.5,
+    "moq": null,
+    "price_basis": "~\u00a32.50 each stock spring, estimate (custom would need quote)",
+    "source_url": null,
+    "line_cost_gbp": 5,
+    "first_order_gbp": 5
+   },
+   {
+    "part": "Threaded rod, rubber foot, ball tips, fasteners",
+    "supplier": "Screwfix / Amazon",
+    "qty": 1,
+    "unit_cost_gbp": 8,
+    "moq": null,
+    "price_basis": "~\u00a38 assorted, estimate",
+    "source_url": null,
+    "line_cost_gbp": 8,
+    "first_order_gbp": 8
+   },
+   {
+    "part": "9V battery + clip (or cylindrical pack)",
+    "supplier": "Local retailer",
+    "qty": 1,
+    "unit_cost_gbp": 5,
+    "moq": null,
+    "price_basis": "~\u00a35 single unit, estimate",
+    "source_url": null,
+    "line_cost_gbp": 5,
+    "first_order_gbp": 5
+   },
+   {
+    "part": "Other components: wiring harness, JST-SH connectors, perfboard, solder",
+    "supplier": "Amazon / AliExpress",
+    "qty": 1,
+    "unit_cost_gbp": 9,
+    "moq": null,
+    "price_basis": "~\u00a39 assorted lot, estimate",
+    "source_url": null,
+    "line_cost_gbp": 9,
+    "first_order_gbp": 9
+   }
+  ],
+  "total_build_cost_gbp": 128.2,
+  "first_build_cost_gbp": 133,
+  "retail_price_gbp": null,
+  "margin_pct": null,
+  "confidence": "low",
+  "notes": "Recorded live run, replayed offline. Mostly own estimates for hobby-retailer single-unit prices; the only usable source was JLC3DP's FDM starting price for printed parts. Actual cost depends heavily on motor choice, spring spec, and print material (SLS nylon would raise cost). (8/8 searches served from cache)",
+  "sources": [
+   {
+    "title": "Online 3D Printing Service| Custom 3D Printed Parts- JLC3DP",
+    "url": "https://jlc3dp.com"
+   }
+  ],
+  "live_sources": true,
+  "warnings": [],
+  "similar": [
+   {
+    "id": "6acfc6068a8a074349ed5752",
+    "product": "DIY 3D-printed single-legged spring hopping robot (gear drive, linkage arms, custom PCB)",
+    "total_build_cost_gbp": 148,
+    "retail_price_gbp": null,
+    "score": 0.93,
+    "shared_parts": [
+     "custom green pcb",
+     "sg92r micro servo"
+    ]
+   },
+   {
+    "id": "6acfc49f00a6aaa228b01f80",
+    "product": "Custom 3D-printed robotic joint/gimbal mechanism with micro servo and geared micro motors",
+    "total_build_cost_gbp": 50.88,
+    "retail_price_gbp": null,
+    "score": 0.71,
+    "shared_parts": [
+     "sg92r micro servo",
+     "brass micro gear motor"
+    ]
+   },
+   {
+    "id": "6acfc49d5d8c244f112a50c8",
+    "product": "DIY 3D-printed jumping/hopping robot with gear-driven spring leg mechanism",
+    "total_build_cost_gbp": 55.5,
+    "retail_price_gbp": null,
+    "score": 0.85,
+    "shared_parts": []
+   },
+   {
+    "id": "6acfc0f798171233f306692b",
+    "product": "MRV custom legged robot leg/foot module prototype (Teensy + dual TB6612 drivers)",
+    "total_build_cost_gbp": 74.62,
+    "retail_price_gbp": null,
+    "score": 0.72,
+    "shared_parts": []
+   }
+  ],
+  "created_at": "2026-10-14T18:21:27.565Z",
+  "assembly": {
+   "summary": "A Teensy on a custom carrier PCB commands two small motor drivers that spin N20 gear motors with magnetic encoders. The motors drive printed spur gears against a curved rack and linkage arms, which compress and release a spring on a threaded-rod leg to produce a hop. An SG92R servo probably adjusts the splayed arms or a latch for leg angle or release, and a battery pack powers everything. Exact mechanism roles are inferred from the photos.",
+   "connections": [
+    {
+     "from": "9V battery + clip (or cylindrical pack)",
+     "to": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
+     "kind": "power",
+     "detail": "Battery feeds the motor supply rail (about 7-9V, assumed). It must be regulated to 5V for the Teensy VIN and servo. Drawn from the photos; the BOM has no regulator."
+    },
+    {
+     "from": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
+     "to": "Teensy 4.0/4.1 microcontroller",
+     "kind": "power",
+     "detail": "The Teensy gets 5V on VIN/USB. Its I/O is 3.3V, and the DRV8833/TB6612 logic inputs accept 3.3V."
+    },
+    {
+     "from": "Teensy 4.0/4.1 microcontroller",
+     "to": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+     "kind": "signal",
+     "detail": "Two PWM and direction/IN pins per motor channel at 3.3V logic."
+    },
+    {
+     "from": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+     "to": "N20 gear motor with magnetic encoder",
+     "kind": "power",
+     "detail": "H-bridge PWM output at battery voltage, a few hundred mA stall per N20 motor."
+    },
+    {
+     "from": "N20 gear motor with magnetic encoder",
+     "to": "Teensy 4.0/4.1 microcontroller",
+     "kind": "signal",
+     "detail": "A/B quadrature encoder lines, 3.3V Hall supply, read via interrupts or the Teensy's QuadTimer hardware; carried over JST-SH harness."
+    },
+    {
+     "from": "Teensy 4.0/4.1 microcontroller",
+     "to": "SG92R micro servo",
+     "kind": "signal",
+     "detail": "50Hz hobby PWM on one GPIO. The servo needs its own 5V supply from the regulator, with ground shared."
+    },
+    {
+     "from": "Brass micro gear motor",
+     "to": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+     "kind": "power",
+     "detail": "Likely driven by the spare driver channel (assumption). Its role is unclear from the photos; possibly the leg winch or a cam."
+    },
+    {
+     "from": "N20 gear motor with magnetic encoder",
+     "to": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
+     "kind": "mechanical",
+     "detail": "Motor pinion drives the printed spur gears, which mesh with the curved rack to move the linkage arms."
+    },
+    {
+     "from": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
+     "to": "Threaded rod, rubber foot, ball tips, fasteners",
+     "kind": "mechanical",
+     "detail": "The geartrain loads the leg spring along the threaded rod. Release of the stored energy pushes the rubber foot off the ground."
+    },
+    {
+     "from": "Coil compression spring + extension spring",
+     "to": "Threaded rod, rubber foot, ball tips, fasteners",
+     "kind": "mechanical",
+     "detail": "Compression spring wraps the rod as the leg energy store; the extension spring probably returns the arms (assumption)."
+    },
+    {
+     "from": "SG92R micro servo",
+     "to": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
+     "kind": "mechanical",
+     "detail": "Mounted in the C-shaped frame, probably actuating a latch or arm angle."
+    }
+   ],
+   "build_steps": [
+    "Print the C-frame, spur gears, curved rack and linkage arms, then clean up the bores and gear teeth.",
+    "Assemble the Teensy and two driver breakouts on the custom PCB, then solder headers and JST-SH connectors.",
+    "Press pinions onto the N20 motor shafts and mount the motors, servo and brass motor in the frame.",
+    "Install the spur gears and curved rack on their axles and check that they mesh and turn freely.",
+    "Thread the rod through the leg, fit the compression and extension springs, then add the rubber foot and ball-tipped arms.",
+    "Wire the motors, encoders, servo and battery with the harness, add a regulator for the 5V rail, and fit a power switch.",
+    "Power up on the bench with the leg unloaded and test each motor's direction, encoder counts and servo travel.",
+    "Calibrate the spring load/release sequence in firmware with current limiting, then try low-energy hops on a tether."
+   ],
+   "inferred_parts": [
+    "5V buck regulator for the Teensy and servo",
+    "Power switch and inline fuse",
+    "Bulk capacitor near the servo and drivers",
+    "Decoupling capacitors",
+    "USB cable for programming",
+    "Limit switch or end stop for the rack",
+    "Latch or release mechanism for the spring (possibly the servo)"
+   ],
+   "risks": [
+    "The 9V battery has high internal resistance and low current capability, so motor stall or servo load can brown out the Teensy; a LiPo pack would be better.",
+    "DRV8833/TB6612 drivers can overheat or limit current when a motor stalls while compressing the spring.",
+    "Printed gears, rack and axles can strip or creep under spring preload and impact on landing.",
+    "Loose wiring and JST-SH connectors can fatigue or detach from hop shock; strain relief is needed.",
+    "Spring-powered mechanisms can release energy suddenly, a pinch/impact hazard when tuning."
+   ]
+  }
+ },
+ "offers": {
+  "mode": "parts",
+  "lines": [
+   {
+    "line": 1,
+    "part": "Teensy 4.0/4.1 microcontroller",
+    "offers": [
+     {
+      "supplier": "RoboSavvy",
+      "url": "https://robosavvy.co.uk/teensy-4-1.html",
+      "title": "Teensy 4.1 - RoboSavvy",
+      "unit_price_gbp": 23.15,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": null,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "SparkFun",
+      "url": "https://www.sparkfun.com/teensy-4-1.html",
+      "title": "Teensy 4.1 - SparkFun",
+      "unit_price_gbp": 24.89,
+      "pack_qty": 1,
+      "price_breaks": [
+       {
+        "min_qty": 25,
+        "unit_gbp": 22.51
+       },
+       {
+        "min_qty": 100,
+        "unit_gbp": 20.93
+       }
+      ],
+      "in_stock": true,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 25
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 24
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 21
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 19
+     }
+    ]
+   },
+   {
+    "line": 2,
+    "part": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
+    "offers": [],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 5
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 1.5
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 0.5
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 0.25
+     }
+    ]
+   },
+   {
+    "line": 3,
+    "part": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+    "offers": [
+     {
+      "supplier": "eBay UK",
+      "url": "https://www.ebay.co.uk/itm/317766399411",
+      "title": "Motor Driver Module Board",
+      "unit_price_gbp": 3.09,
+      "pack_qty": 1,
+      "price_breaks": [
+       {
+        "min_qty": 2,
+        "unit_gbp": 2.84
+       },
+       {
+        "min_qty": 3,
+        "unit_gbp": 2.78
+       },
+       {
+        "min_qty": 4,
+        "unit_gbp": 2.72
+       },
+       {
+        "min_qty": 5,
+        "unit_gbp": 2.72
+       }
+      ],
+      "in_stock": null,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 4
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 3
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 2.2
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 1.6
+     }
+    ]
+   },
+   {
+    "line": 4,
+    "part": "N20 gear motor with magnetic encoder",
+    "offers": [
+     {
+      "supplier": "The Pi Hut",
+      "url": "https://thepihut.com/products/adafruit-n20-dc-motor-with-magnetic-encoder-6v-with-1-298-gear-ratio",
+      "title": "N20 DC Motor with Magnetic Encoder 6V 1:298",
+      "unit_price_gbp": 12,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": true,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "ServoCity",
+      "url": "https://www.servocity.com/270-rpm-micro-gear-motor-w-encoder",
+      "title": "Premium N20 Gear Motor 100:1 with Encoder",
+      "unit_price_gbp": 15.79,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": null,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "Precision Microdrives",
+      "url": "https://precisionminidrives.com/product/12mm-dc-gear-motor-with-encoder-29mm-type-model-nfp-gm12-n20-cdm",
+      "title": "12mm DC Gear Motor with Encoder 29mm",
+      "unit_price_gbp": 11.85,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": null,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 12
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 9.5
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 7.5
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 5.5
+     }
+    ]
+   },
+   {
+    "line": 5,
+    "part": "Brass micro gear motor",
+    "offers": [
+     {
+      "supplier": "Technobots",
+      "url": "https://www.technobotsonline.com/makertronics-3v-100-rpm-n20-micro-metal-gear-motor.html",
+      "title": "Makertronics 3V 100 RPM N20 Micro Metal Gear Motor",
+      "unit_price_gbp": 4.16,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": null,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "4tronix",
+      "url": "https://shop.4tronix.co.uk/products/n20-micro-metal-geared-motor-6v-various-speeds",
+      "title": "N20 Micro Metal Geared Motor 6V",
+      "unit_price_gbp": 1.2,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": true,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 4
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 3.2
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 2.5
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 1.8
+     }
+    ]
+   },
+   {
+    "line": 6,
+    "part": "SG92R micro servo",
+    "offers": [
+     {
+      "supplier": "The Pi Hut",
+      "url": "https://thepihut.com/products/servo-motor-sg92r-micro",
+      "title": "TowerPro Servo Motor SG92R Micro",
+      "unit_price_gbp": 4,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": true,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "ProtoSupplies",
+      "url": "https://protosupplies.com/product/servo-motor-micro-sg92r",
+      "title": "Servo Motor Micro SG92R",
+      "unit_price_gbp": 2.99,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": true,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "Adafruit",
+      "url": "https://www.adafruit.com/product/169",
+      "title": "Micro servo TowerPro SG92R",
+      "unit_price_gbp": 4.7,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": true,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 4
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 3.2
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 2.5
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 1.8
+     }
+    ]
+   },
+   {
+    "line": 7,
+    "part": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
+    "offers": [],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 20
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 14
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 9
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 6
+     }
+    ]
+   },
+   {
+    "line": 8,
+    "part": "Coil compression spring + extension spring",
+    "offers": [],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 2.75
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 1.6
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 0.8
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 0.4
+     }
+    ]
+   },
+   {
+    "line": 9,
+    "part": "Threaded rod, rubber foot, ball tips, fasteners",
+    "offers": [],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 8
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 6
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 4
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 2.5
+     }
+    ]
+   },
+   {
+    "line": 10,
+    "part": "9V battery + clip (or cylindrical pack)",
+    "offers": [
+     {
+      "supplier": "Switch Electronics",
+      "url": "https://www.switchelectronics.co.uk/products/pp3-9v-battery-clip-connector-50mm",
+      "title": "PP3 9V Battery Clip Connector 50mm",
+      "unit_price_gbp": 0.29,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": null,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "Farnell",
+      "url": "https://uk.farnell.com/mcm/29-130/9v-battery-snap-connector/dp/2783529",
+      "title": "MCM 29-130 9V Battery Snap Connector",
+      "unit_price_gbp": 0.93,
+      "pack_qty": 1,
+      "price_breaks": [
+       {
+        "min_qty": 50,
+        "unit_gbp": 0.546
+       }
+      ],
+      "in_stock": null,
+      "lead_time_days": null
+     },
+     {
+      "supplier": "Mouser",
+      "url": "https://www.mouser.co.uk/en/c/power/battery-holders-clips-contacts/9v-battery-snaps-contacts",
+      "title": "Adafruit 9V battery clip with 5.5/2.1mm plug",
+      "unit_price_gbp": 2.22,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": true,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 5
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 3.8
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 2.8
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 2
+     }
+    ]
+   },
+   {
+    "line": 11,
+    "part": "Other components: wiring harness, JST-SH connectors, perfboard, solder",
+    "offers": [
+     {
+      "supplier": "The Pi Hut",
+      "url": "https://thepihut.com/collections/jst-compatible-cables",
+      "title": "JST-Compatible Cables",
+      "unit_price_gbp": 0.9,
+      "pack_qty": 1,
+      "price_breaks": [],
+      "in_stock": null,
+      "lead_time_days": null
+     }
+    ],
+    "volume_breaks": [
+     {
+      "min_qty": 1,
+      "unit_gbp": 9
+     },
+     {
+      "min_qty": 10,
+      "unit_gbp": 7
+     },
+     {
+      "min_qty": 100,
+      "unit_gbp": 5
+     },
+     {
+      "min_qty": 1000,
+      "unit_gbp": 3.5
+     }
+    ]
+   }
+  ],
+  "suppliers": [
+   {
+    "name": "RoboSavvy",
+    "shipping_gbp": 4.5,
+    "free_over_gbp": null,
+    "delivery_days": 3
+   },
+   {
+    "name": "SparkFun",
+    "shipping_gbp": 15,
+    "free_over_gbp": null,
+    "delivery_days": 7
+   },
+   {
+    "name": "eBay UK",
+    "shipping_gbp": 2,
+    "free_over_gbp": null,
+    "delivery_days": 4
+   },
+   {
+    "name": "The Pi Hut",
+    "shipping_gbp": 3,
+    "free_over_gbp": 50,
+    "delivery_days": 2
+   },
+   {
+    "name": "ServoCity",
+    "shipping_gbp": 15,
+    "free_over_gbp": null,
+    "delivery_days": 10
+   },
+   {
+    "name": "Precision Microdrives",
+    "shipping_gbp": 5,
+    "free_over_gbp": null,
+    "delivery_days": 4
+   },
+   {
+    "name": "Technobots",
+    "shipping_gbp": 3.5,
+    "free_over_gbp": null,
+    "delivery_days": 3
+   },
+   {
+    "name": "4tronix",
+    "shipping_gbp": 3,
+    "free_over_gbp": null,
+    "delivery_days": 3
+   },
+   {
+    "name": "ProtoSupplies",
+    "shipping_gbp": 15,
+    "free_over_gbp": null,
+    "delivery_days": 10
+   },
+   {
+    "name": "Adafruit",
+    "shipping_gbp": 15,
+    "free_over_gbp": null,
+    "delivery_days": 8
+   },
+   {
+    "name": "Switch Electronics",
+    "shipping_gbp": 2.5,
+    "free_over_gbp": null,
+    "delivery_days": 3
+   },
+   {
+    "name": "Farnell",
+    "shipping_gbp": 4,
+    "free_over_gbp": 33,
+    "delivery_days": 2
+   },
+   {
+    "name": "Mouser",
+    "shipping_gbp": 6,
+    "free_over_gbp": 33,
+    "delivery_days": 3
+   }
+  ],
+  "warnings": []
+ }
+}

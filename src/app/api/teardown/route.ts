@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       ]
     : product.visible_components.slice(0, 8).map((c) => `${c} price specs buy UK`);
 
-  const results = await Promise.all(queries.map(cachedSearch));
+  const results = await Promise.all(queries.map((q) => cachedSearch(q)));
   const failed = results.filter((r) => r === null).length;
   if (failed) warnings.push(`${failed}/${queries.length} web searches failed`);
   const cachedCount = results.filter((r) => r?.cached).length;
@@ -103,10 +103,8 @@ Build the BOM.`;
   const retail = extraction.retail_price_gbp;
   const margin = retail && retail > 0 ? Math.round(((retail - total) / retail) * 1000) / 10 : null;
   const cited = new Set(bom.map((l) => l.source_url).filter(Boolean));
-  const sources: Source[] = hits
-    .filter((h) => cited.has(h.url))
-    .concat(hits.filter((h) => !cited.has(h.url)).slice(0, 4))
-    .map((h) => ({ title: h.title, url: h.url }));
+  // Only pages the BOM actually cites (plus a retail-price source the notes may lean on).
+  const sources: Source[] = hits.filter((h) => cited.has(h.url)).map((h) => ({ title: h.title, url: h.url }));
 
   const teardown: Teardown = {
     product: extraction.product || product.product_guess,
@@ -124,7 +122,7 @@ Build the BOM.`;
     similar: [],
     created_at: new Date().toISOString(),
   };
-  if (cachedCount) teardown.notes += ` (${cachedCount}/${queries.length} searches served from cache)`;
+  teardown.notes += ` Searched ${hits.length} pages${cachedCount ? `, ${cachedCount}/${queries.length} searches from cache` : ""}.`;
 
   // 4. Similar past teardowns + store (best-effort: never fail the response).
   try {

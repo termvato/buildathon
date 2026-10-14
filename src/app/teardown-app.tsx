@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import BuySection from "./buy-section";
 import { demoProducts } from "@/lib/demo";
-import type { Assembly, Confidence, ImageAnalysis, Product, Teardown } from "@/lib/schemas";
+import type { Assembly, Confidence, ImageAnalysis, Offers, Product, Teardown } from "@/lib/schemas";
 
 const MAX_PHOTOS = 8;
 
@@ -51,17 +52,19 @@ export default function TeardownApp() {
   const [identify, setIdentify] = useState<Step<Product>>(idle);
   const [teardown, setTeardown] = useState<Step<Teardown>>(idle);
   const [assembly, setAssembly] = useState<Step<Assembly>>(idle);
+  const [offers, setOffers] = useState<Step<Offers>>(idle);
   const [notice, setNotice] = useState<string>("");
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isDemo = photos.some((p) => p.demo);
-  const busy = [identify, teardown, assembly].some((s) => s.status === "loading");
+  const busy = [identify, teardown, assembly, offers].some((s) => s.status === "loading");
 
   const clearResults = () => {
     setIdentify(idle);
     setTeardown(idle);
     setAssembly(idle);
+    setOffers(idle);
     setNotice("");
   };
 
@@ -105,13 +108,30 @@ export default function TeardownApp() {
     }
   };
 
+  const runOffers = async (product: Product, t: Teardown) => {
+    setOffers({ status: "loading" });
+    try {
+      const { offers } = await postJson<{ offers: Offers }>("/api/offers", {
+        teardownId: t.id,
+        product: t.product,
+        is_known_product: product.is_known_product,
+        bom: t.bom.map(({ part, supplier, qty, unit_cost_gbp, moq }) => ({ part, supplier, qty, unit_cost_gbp, moq })),
+      });
+      setOffers({ status: "done", value: offers });
+    } catch (err) {
+      setOffers({ status: "error", error: String(err) });
+    }
+  };
+
   const runTeardown = async (product: Product, shots: Photo[]) => {
     setTeardown({ status: "loading" });
     setAssembly(idle);
+    setOffers(idle);
     try {
       const { teardown } = await postJson<{ teardown: Teardown }>("/api/teardown", product);
       setTeardown({ status: "done", value: teardown });
-      await runAssembly(product, teardown, shots);
+      // Sourcing and reasoning only need the BOM: run them side by side.
+      await Promise.all([runOffers(product, teardown), runAssembly(product, teardown, shots)]);
     } catch (err) {
       setTeardown({ status: "error", error: String(err) });
     }
@@ -147,6 +167,7 @@ export default function TeardownApp() {
     setIdentify({ status: "done", value: d.product });
     setTeardown({ status: "done", value: d.teardown });
     setAssembly({ status: "done", value: d.teardown.assembly });
+    setOffers(d.offers ? { status: "done", value: d.offers } : idle);
   };
 
   const realCount = photos.filter((p) => !p.demo).length;
@@ -242,7 +263,7 @@ export default function TeardownApp() {
         >
           {busy ? "Working…" : realCount ? `Tear down (${realCount} photo${realCount === 1 ? "" : "s"})` : "Tear down"}
         </button>
-        {!isDemo && <Steps identify={identify} teardown={teardown} assembly={assembly} />}
+        {!isDemo && <Steps identify={identify} teardown={teardown} assembly={assembly} offers={offers} />}
       </div>
 
       {notice && <p className="mt-3 text-xs text-amber-300">⚠ {notice}</p>}
@@ -288,7 +309,29 @@ export default function TeardownApp() {
             </div>
           )}
 
-          {/* 3. Reasoning layer */}
+          {/* 3. Where to buy */}
+          {t && (offers.status !== "idle" || isDemo) && (
+            <div className="border-t border-neutral-800 p-5">
+              <h3 className="text-lg font-semibold">{product.is_known_product ? "Where to buy it" : "Where to buy the parts"}</h3>
+              {offers.status === "loading" && <Loading text="Finding listings, stock and shipping…" pad={false} />}
+              {offers.status === "error" && (
+                <div className="mt-3">
+                  <ErrorBox msg={offers.error!} onRetry={() => runOffers(product, t)} />
+                </div>
+              )}
+              {offers.status === "idle" && isDemo && <p className="mt-2 text-sm text-neutral-500">Run live to fetch listings.</p>}
+              {offers.value && <BuySection t={t} offers={offers.value} />}
+              {offers.value && offers.value.warnings.length > 0 && (
+                <ul className="mt-3 text-xs text-amber-400/80">
+                  {offers.value.warnings.map((w, i) => (
+                    <li key={i}>⚠ {w}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* 4. Reasoning layer */}
           {t && (
             <div className="border-t border-neutral-800 p-5">
               <h3 className="text-lg font-semibold">How it fits together</h3>
@@ -307,10 +350,11 @@ export default function TeardownApp() {
   );
 }
 
-function Steps({ identify, teardown, assembly }: { identify: Step<unknown>; teardown: Step<unknown>; assembly: Step<unknown> }) {
+function Steps({ identify, teardown, assembly, offers }: { identify: Step<unknown>; teardown: Step<unknown>; assembly: Step<unknown>; offers: Step<unknown> }) {
   const items: [string, Step<unknown>][] = [
     ["Identify", identify],
     ["Research + BOM", teardown],
+    ["Where to buy", offers],
     ["How it fits", assembly],
   ];
   if (identify.status === "idle") return null;

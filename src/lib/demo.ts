@@ -1,4 +1,5 @@
-import type { Assembly, BomRow, Product, Teardown } from "@/lib/schemas";
+import type { Assembly, BomRow, Offers, Product, Teardown } from "@/lib/schemas";
+import robot from "./demo-robot.json";
 
 // Offline fallback for the live demo (no network needed). Figures are
 // illustrative estimates, not sourced teardown data.
@@ -11,6 +12,7 @@ export type DemoProduct = {
   photos: string[];
   product: Product;
   teardown: Teardown;
+  offers?: Offers;
 };
 
 const row = (part: string, supplier: string, qty: number, unit: number, basis: string, q: string): BomRow => ({
@@ -131,6 +133,16 @@ const macbook = teardown(
 );
 
 export const demoProducts: DemoProduct[] = [
+  // Recorded from a real live run (Tavily + Claude), replayed offline.
+  {
+    key: "robot",
+    label: "Hopping robot",
+    emoji: "🤖",
+    photos: ["Full robot", "Leg + spring", "Joint close-up"],
+    product: robot.product as Product,
+    teardown: robot.teardown as Teardown,
+    offers: robot.offers as Offers,
+  },
   {
     key: "airpods",
     label: "AirPods Pro 2",

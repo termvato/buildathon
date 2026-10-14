@@ -1,4 +1,4 @@
-import { tavily } from "@tavily/core";
+import { tavily, type TavilySearchOptions } from "@tavily/core";
 import { getDb } from "@/lib/db";
 
 export type SearchHit = { title: string; url: string; content: string };
@@ -7,8 +7,11 @@ export type SearchHit = { title: string; url: string; content: string };
 const client = tavily(process.env.TAVILY_API_KEY ? { apiKey: process.env.TAVILY_API_KEY } : {});
 
 /** Tavily search with a MongoDB cache. Returns null if search is unavailable. */
-export async function cachedSearch(query: string): Promise<{ hits: SearchHit[]; cached: boolean } | null> {
-  const key = query.trim().toLowerCase();
+export async function cachedSearch(
+  query: string,
+  opts: TavilySearchOptions = {},
+): Promise<{ hits: SearchHit[]; cached: boolean } | null> {
+  const key = query.trim().toLowerCase() + (Object.keys(opts).length ? " " + JSON.stringify(opts) : "");
   const cache = await getDb()
     .then((db) => db.collection<{ query: string; hits: SearchHit[]; at: Date }>("tavily_cache"))
     .catch(() => null);
@@ -17,7 +20,7 @@ export async function cachedSearch(query: string): Promise<{ hits: SearchHit[]; 
   if (hit) return { hits: hit.hits, cached: true };
 
   try {
-    const res = await client.search(query, { maxResults: 6, searchDepth: "basic" });
+    const res = await client.search(query, { maxResults: 6, searchDepth: "basic", ...opts });
     const hits = res.results.map((r) => ({
       title: r.title,
       url: r.url,
