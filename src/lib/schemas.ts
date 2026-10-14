@@ -15,10 +15,18 @@ export type ImageAnalysis = z.infer<typeof ImageAnalysis>;
 export const BomLine = z.object({
   part: z.string(),
   supplier: z.string(),
-  est_cost_gbp: z.number(),
+  qty: z.number(), // needed per finished unit
+  unit_cost_gbp: z.number(), // price per piece at the quoted quantity
+  moq: z.number().nullable(), // minimum order quantity, null if you can buy 1 / not applicable
+  price_basis: z.string(), // e.g. "$5 each at MOQ 5 (JLCPCB)", "est. at 1M-unit volume"
   source_url: z.string().nullable(),
 });
 export type BomLine = z.infer<typeof BomLine>;
+
+export type BomRow = BomLine & {
+  line_cost_gbp: number; // qty * unit cost: cost per finished unit
+  first_order_gbp: number; // what you actually pay for the first build, MOQ applied
+};
 
 // What Claude returns for a teardown; totals and margin are computed server-side.
 export const BomExtraction = z.object({
@@ -30,11 +38,22 @@ export const BomExtraction = z.object({
 });
 export type BomExtraction = z.infer<typeof BomExtraction>;
 
+export const ConnectionKind = z.enum(["power", "data", "signal", "mechanical", "rf"]);
+
+export const Assembly = z.object({
+  summary: z.string(),
+  connections: z.array(
+    z.object({ from: z.string(), to: z.string(), kind: ConnectionKind, detail: z.string() }),
+  ),
+  build_steps: z.array(z.string()),
+  inferred_parts: z.array(z.string()),
+  risks: z.array(z.string()),
+});
+export type Assembly = z.infer<typeof Assembly>;
+
 export type Source = { title: string; url: string };
 
-export type ProductGroup = {
-  groupId: string;
-  imageIds: string[];
+export type Product = {
   product_guess: string;
   is_known_product: boolean;
   confidence: Confidence;
@@ -55,8 +74,9 @@ export type Teardown = {
   id?: string;
   product: string;
   is_known_product: boolean;
-  bom: BomLine[];
-  total_build_cost_gbp: number;
+  bom: BomRow[];
+  total_build_cost_gbp: number; // per unit
+  first_build_cost_gbp: number; // first unit incl. MOQs
   retail_price_gbp: number | null;
   margin_pct: number | null;
   confidence: Confidence;
@@ -65,5 +85,6 @@ export type Teardown = {
   live_sources: boolean;
   warnings: string[];
   similar: SimilarTeardown[];
+  assembly?: Assembly;
   created_at?: string;
 };

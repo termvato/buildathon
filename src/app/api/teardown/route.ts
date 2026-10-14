@@ -3,7 +3,7 @@ import { z } from "zod";
 import { claudeJson } from "@/lib/claude";
 import { ensureIndexes, getDb, VEC_INDEX } from "@/lib/db";
 import { embedTexts } from "@/lib/embed";
-import { BomExtraction, type SimilarTeardown, type Source, type Teardown } from "@/lib/schemas";
+import { BomExtraction, type BomRow, type SimilarTeardown, type Source, type Teardown } from "@/lib/schemas";
 import { cachedSearch, type SearchHit } from "@/lib/tavily";
 
 export const maxDuration = 120;
@@ -16,18 +16,25 @@ const Body = z.object({
 });
 
 const SYSTEM = `You estimate hardware bills of materials (BOM) in GBP for a teardown tool.
-Use the numbered web sources when they contain costs; otherwise give your best engineering estimate.
-Rules:
+Use the numbered web sources when they contain prices; otherwise give your best engineering estimate.
+Every line states WHAT QUANTITY ITS PRICE IS FOR:
+- qty: how many are needed per finished unit.
+- unit_cost_gbp: price of ONE piece at the quantity you're quoting.
+- moq: minimum order quantity if the part can't be bought singly (custom PCBs typically 5, PCBA ~2-5, injection moulding 1000+, cut-to-size materials, reels); null if you can buy exactly what you need.
+- price_basis: short human note, e.g. "$5 each at MOQ 5 (JLCPCB 2-layer)", "£35 single unit, The Pi Hut", "est. at ~1M-unit volume".
+For known mass-market products: quote manufacturer costs at production volume (moq null) - that is what teardown BOMs report.
+For prototypes / custom hardware: quote what a maker would pay buying parts today (hobby retailers, JLCPCB, AliExpress, Digikey), with real MOQs.
+Other rules:
 - source_url must be copied exactly from the provided sources, or null if the line is your own estimate.
-- est_cost_gbp is the per-unit component cost to the manufacturer (for known products) or the retail cost of buying the part (for prototypes). Convert USD at 0.79 GBP/USD.
-- 6-15 lines; group minor parts into "Other components / assembly".
-- retail_price_gbp: the UK retail price if it's a commercial product and you know it or a source states it, else null.
-- confidence: high only if multiple sources give a BOM; low if mostly your own estimate.
+- Convert USD at 0.79 GBP/USD and EUR at 0.85.
+- 6-15 lines; group minor parts into "Other components / hardware".
+- retail_price_gbp: UK retail price if it's a commercial product and you know it or a source states it, else null.
+- confidence: high only if multiple sources give prices; low if mostly your own estimate.
 - notes: one or two sentences on method and caveats.`;
 
 export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Expected a product group" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Expected a product" }, { status: 400 });
   const product = parsed.data;
   const warnings: string[] = [];
 
@@ -76,12 +83,23 @@ Build the BOM.`;
 
   // 3. Validate + compute numbers ourselves (don't trust model arithmetic or URLs).
   const allowed = new Set(byUrl.keys());
-  const bom = extraction.bom.map((l) => ({
-    ...l,
-    est_cost_gbp: Math.max(0, Math.round(l.est_cost_gbp * 100) / 100),
-    source_url: l.source_url && allowed.has(l.source_url) ? l.source_url : null,
-  }));
-  const total = Math.round(bom.reduce((s, l) => s + l.est_cost_gbp, 0) * 100) / 100;
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const bom: BomRow[] = extraction.bom.map((l) => {
+    const qty = Math.max(1, l.qty);
+    const unit = Math.max(0, l.unit_cost_gbp);
+    const moq = l.moq && l.moq > 1 ? Math.round(l.moq) : null;
+    return {
+      ...l,
+      qty,
+      moq,
+      unit_cost_gbp: r2(unit),
+      line_cost_gbp: r2(unit * qty),
+      first_order_gbp: r2(unit * Math.max(qty, moq ?? 0)),
+      source_url: l.source_url && allowed.has(l.source_url) ? l.source_url : null,
+    };
+  });
+  const total = r2(bom.reduce((s, l) => s + l.line_cost_gbp, 0));
+  const firstBuild = r2(bom.reduce((s, l) => s + l.first_order_gbp, 0));
   const retail = extraction.retail_price_gbp;
   const margin = retail && retail > 0 ? Math.round(((retail - total) / retail) * 1000) / 10 : null;
   const cited = new Set(bom.map((l) => l.source_url).filter(Boolean));
@@ -95,6 +113,7 @@ Build the BOM.`;
     is_known_product: product.is_known_product,
     bom,
     total_build_cost_gbp: total,
+    first_build_cost_gbp: firstBuild,
     retail_price_gbp: retail,
     margin_pct: margin,
     confidence: liveSources ? extraction.confidence : "low",
