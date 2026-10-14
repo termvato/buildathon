@@ -89,49 +89,6 @@ const airpods = teardown(
   "AirPods Pro 2 teardown",
 );
 
-const macbook = teardown(
-  "Apple MacBook Air 13-inch (M4)",
-  [
-    row("M4 SoC (10-core CPU / 8-core GPU)", "Apple / TSMC", 1, 75, vol, "MacBook Air M4 logic board"),
-    row("16GB unified memory", "SK Hynix / Micron", 1, 35, vol, "MacBook Air M4 RAM"),
-    row("256GB NAND storage", "Kioxia / Samsung", 1, 18, vol, "MacBook Air M4 SSD"),
-    row('13.6" Liquid Retina display', "LG Display / BOE", 1, 60, vol, "MacBook Air M4 display"),
-    row("Aluminium unibody + machining", "Foxconn / Catcher", 1, 30, vol, "MacBook Air M4 case"),
-    row("53.8Wh battery", "Sunwoda / Desay", 1, 18, vol, "MacBook Air M4 battery"),
-    row("Keyboard + Touch ID", "Darfon / Apple", 1, 15, vol, "MacBook Air M4 keyboard"),
-    row("Force Touch trackpad", "TPK", 1, 12, vol, "MacBook Air M4 trackpad"),
-    row("Speakers, mics, 12MP camera", "AAC / Sony", 1, 14, vol, "MacBook Air M4 camera"),
-    row("Wi-Fi/BT, PMIC, logic board", "Broadcom / TI", 1, 25, vol, "MacBook Air M4 wifi"),
-    row("Power adapter", "Delta / Lite-On", 1, 7, vol, "MacBook Air charger"),
-    row("Assembly, test + packaging", "Quanta / Foxconn", 1, 20, vol, "MacBook Air M4 teardown"),
-  ],
-  999,
-  {
-    summary:
-      "A fanless design built around the M4 SoC with memory on-package and NAND soldered to a compact logic board. The battery fills most of the chassis, and the aluminium unibody doubles as the heat spreader.",
-    connections: [
-      { from: "Power adapter", to: "Wi-Fi/BT, PMIC, logic board", kind: "power", detail: "USB-C / MagSafe PD input, up to ~70W" },
-      { from: "53.8Wh battery", to: "Wi-Fi/BT, PMIC, logic board", kind: "power", detail: "~11.4V pack into PMIC rails" },
-      { from: "M4 SoC (10-core CPU / 8-core GPU)", to: "16GB unified memory", kind: "data", detail: "On-package LPDDR5X" },
-      { from: "M4 SoC (10-core CPU / 8-core GPU)", to: "256GB NAND storage", kind: "data", detail: "Apple fabric SSD controller in the SoC" },
-      { from: "M4 SoC (10-core CPU / 8-core GPU)", to: '13.6" Liquid Retina display', kind: "data", detail: "eDP flex through the hinge" },
-      { from: "Keyboard + Touch ID", to: "M4 SoC (10-core CPU / 8-core GPU)", kind: "data", detail: "Secure Enclave link for Touch ID" },
-      { from: "Aluminium unibody + machining", to: "M4 SoC (10-core CPU / 8-core GPU)", kind: "mechanical", detail: "Thermal spreader to chassis, no fan" },
-    ],
-    build_steps: [
-      "CNC-machine the unibody from an aluminium block and anodise it.",
-      "SMT-assemble the logic board around the M4 package.",
-      "Glue the battery cells into the bottom case.",
-      "Install the logic board, speakers and trackpad, then route the flexes.",
-      "Attach the display assembly through the hinge and connect eDP.",
-      "Close the bottom case, flash firmware and run burn-in tests.",
-    ],
-    inferred_parts: ["Thermal spreader / graphite sheet", "Hinge assembly", "Battery management IC"],
-    risks: ["Fanless design throttles under sustained load", "Soldered RAM and SSD mean no upgrades or repairs"],
-  },
-  "MacBook Air M4 teardown",
-);
-
 export const demoProducts: DemoProduct[] = [
   // Recorded from a real live run (Tavily + Claude), replayed offline.
   {
@@ -149,14 +106,6 @@ export const demoProducts: DemoProduct[] = [
     emoji: "🎧",
     photos: ["Case, closed", "Case, open", "Single earbud"],
     product: { product_guess: airpods.product, is_known_product: true, confidence: "high", visible_components: ["Charging case", "Earbuds", "USB-C port"], description: "White wireless earbuds with a glossy charging case." },
-    teardown: { ...airpods, similar: [{ id: "macbook", product: macbook.product, total_build_cost_gbp: macbook.total_build_cost_gbp, retail_price_gbp: 999, score: 0.62, shared_parts: ["assembly test packaging"] }] },
-  },
-  {
-    key: "macbook",
-    label: "MacBook Air M4",
-    emoji: "💻",
-    photos: ["Lid open", "Underside"],
-    product: { product_guess: macbook.product, is_known_product: true, confidence: "high", visible_components: ["Display", "Keyboard", "Trackpad", "MagSafe port"], description: "Thin aluminium laptop with a 13-inch display." },
-    teardown: { ...macbook, similar: [{ id: "airpods", product: airpods.product, total_build_cost_gbp: airpods.total_build_cost_gbp, retail_price_gbp: 229, score: 0.62, shared_parts: ["assembly test packaging"] }] },
+    teardown: airpods,
   },
 ];
