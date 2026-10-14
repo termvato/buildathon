@@ -128,7 +128,8 @@ async function vectorGroups(
       .toArray();
 
   for (let attempt = 0; attempt < 8; attempt++) {
-    const probe = await search(embeddings[0]);
+    // Index may still be in INITIAL_SYNC on first use, or not yet include this batch.
+    const probe = await search(embeddings[0]).catch(() => []);
     if (probe.length >= n) return Promise.all(embeddings.map(search));
     await new Promise((r) => setTimeout(r, 1000));
   }

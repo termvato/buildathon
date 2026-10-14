@@ -186,6 +186,7 @@ async function findSimilar(
     }
   }
   return [...seen.values()]
+    .filter((s) => s.shared_parts.length > 0 || (s.score ?? 0) >= 0.6)
     .sort((a, b) => b.shared_parts.length - a.shared_parts.length || (b.score ?? 0) - (a.score ?? 0))
     .slice(0, 4);
 }
