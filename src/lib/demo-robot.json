@@ -209,100 +209,196 @@
   ],
   "created_at": "2026-10-14T18:21:27.565Z",
   "assembly": {
-   "summary": "A Teensy on a custom carrier PCB commands two small motor drivers that spin N20 gear motors with magnetic encoders. The motors drive printed spur gears against a curved rack and linkage arms, which compress and release a spring on a threaded-rod leg to produce a hop. An SG92R servo probably adjusts the splayed arms or a latch for leg angle or release, and a battery pack powers everything. Exact mechanism roles are inferred from the photos.",
+   "summary": "A Teensy on a custom carrier PCB drives two N20 encoder gear motors through two H-bridge driver boards, plus an SG92R servo and a brass gear motor, to move a 3D-printed gear train and curved rack that load and release a spring-wrapped threaded-rod leg. Encoder feedback closes the position loop on the motors, and the servo likely adjusts the splayed linkage arms or a latch (assumption from photos). A battery supplies the motors and a regulated 5V rail supplies the logic.",
    "connections": [
+    {
+     "from": "9V battery + clip (or cylindrical pack)",
+     "to": "Motor driver boards",
+     "kind": "power",
+     "detail": "Raw battery voltage (about 6-9V, assumption) to the VM pins. Check the driver's rated voltage and the motor ratings; N20 motors are commonly 6V or 12V."
+    },
     {
      "from": "9V battery + clip (or cylindrical pack)",
      "to": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
      "kind": "power",
-     "detail": "Battery feeds the motor supply rail (about 7-9V, assumed). It must be regulated to 5V for the Teensy VIN and servo. Drawn from the photos; the BOM has no regulator."
-    },
-    {
-     "from": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
-     "to": "Teensy 4.0/4.1 microcontroller",
-     "kind": "power",
-     "detail": "The Teensy gets 5V on VIN/USB. Its I/O is 3.3V, and the DRV8833/TB6612 logic inputs accept 3.3V."
+     "detail": "Battery feeds a 5V regulator (not in BOM) that powers Teensy VIN/VUSB, the servo and the encoder supplies. The Teensy 3.3V pin supplies the encoder logic if needed."
     },
     {
      "from": "Teensy 4.0/4.1 microcontroller",
-     "to": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+     "to": "Motor driver boards",
      "kind": "signal",
-     "detail": "Two PWM and direction/IN pins per motor channel at 3.3V logic."
+     "detail": "PWM and direction pins (2 per motor on a DRV8833/TB6612) at 3.3V logic."
     },
     {
-     "from": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
+     "from": "Motor driver boards",
      "to": "N20 gear motor with magnetic encoder",
      "kind": "power",
-     "detail": "H-bridge PWM output at battery voltage, a few hundred mA stall per N20 motor."
+     "detail": "H-bridge outputs drive the motor leads, with current of about 0.2-0.8A each, higher at stall."
     },
     {
      "from": "N20 gear motor with magnetic encoder",
      "to": "Teensy 4.0/4.1 microcontroller",
      "kind": "signal",
-     "detail": "A/B quadrature encoder lines, 3.3V Hall supply, read via interrupts or the Teensy's QuadTimer hardware; carried over JST-SH harness."
+     "detail": "A/B quadrature encoder lines at 3.3V, wired to interrupt or QuadTimer-capable pins, with 3.3V and GND for the Hall sensors."
     },
     {
      "from": "Teensy 4.0/4.1 microcontroller",
      "to": "SG92R micro servo",
      "kind": "signal",
-     "detail": "50Hz hobby PWM on one GPIO. The servo needs its own 5V supply from the regulator, with ground shared."
+     "detail": "50Hz hobby PWM at 3.3V logic. The servo is powered from 5V, not from the Teensy pin."
     },
     {
      "from": "Brass micro gear motor",
-     "to": "Motor driver boards (e.g. DRV8833/TB6612 breakout)",
-     "kind": "power",
-     "detail": "Likely driven by the spare driver channel (assumption). Its role is unclear from the photos; possibly the leg winch or a cam."
+     "to": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
+     "kind": "mechanical",
+     "detail": "Motor pinion drives the printed spur gear train (assumption). The gears mesh with the curved rack to compress the spring."
     },
     {
      "from": "N20 gear motor with magnetic encoder",
      "to": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
      "kind": "mechanical",
-     "detail": "Motor pinion drives the printed spur gears, which mesh with the curved rack to move the linkage arms."
+     "detail": "Motor shaft pinion presses onto the printed spur gears. Motor clamped in printed pockets."
     },
     {
-     "from": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
-     "to": "Threaded rod, rubber foot, ball tips, fasteners",
+     "from": "Threaded rod, rubber foot, ball tips, fasteners",
+     "to": "Coil compression spring + extension spring",
      "kind": "mechanical",
-     "detail": "The geartrain loads the leg spring along the threaded rod. Release of the stored energy pushes the rubber foot off the ground."
+     "detail": "Spring wraps the rod and is preloaded between the frame and foot. The rubber foot is on the lower end."
     },
     {
-     "from": "Coil compression spring + extension spring",
-     "to": "Threaded rod, rubber foot, ball tips, fasteners",
-     "kind": "mechanical",
-     "detail": "Compression spring wraps the rod as the leg energy store; the extension spring probably returns the arms (assumption)."
+     "from": "Teensy 4.0/4.1 microcontroller",
+     "to": "Custom green PCB (carrier for Teensy + 2 motor drivers)",
+     "kind": "data",
+     "detail": "Mounted on headers. USB gives programming and serial debug. Any IMU would use I2C (assumption, none in BOM)."
+    }
+   ],
+   "fitting_parts": [
+    {
+     "part": "M3x8 socket cap screws",
+     "qty": "~20",
+     "purpose": "Join the printed frame halves, motor clamps and servo bracket",
+     "est_cost_gbp": 4
     },
     {
-     "from": "SG92R micro servo",
-     "to": "3D-printed frame, linkage arms, spur gears, curved rack (FDM/SLS nylon)",
-     "kind": "mechanical",
-     "detail": "Mounted in the C-shaped frame, probably actuating a latch or arm angle."
+     "part": "M3 nuts and washers (or M3 heat-set inserts)",
+     "qty": "~20 each",
+     "purpose": "Captive fastening into printed parts",
+     "est_cost_gbp": 5
+    },
+    {
+     "part": "M2x10 screws and nuts",
+     "qty": "~8",
+     "purpose": "Mount the SG92R servo and N20 brackets",
+     "est_cost_gbp": 2
+    },
+    {
+     "part": "Pin headers and sockets (2.54mm)",
+     "qty": "2 sets",
+     "purpose": "Mount Teensy and driver boards on the carrier PCB",
+     "est_cost_gbp": 3
+    },
+    {
+     "part": "JST-SH 4-pin and 6-pin cables",
+     "qty": "~4",
+     "purpose": "Encoder and motor connections",
+     "est_cost_gbp": 6
+    },
+    {
+     "part": "26-28 AWG silicone wire, twisted pairs",
+     "qty": "~2m",
+     "purpose": "Motor, power and servo wiring",
+     "est_cost_gbp": 5
+    },
+    {
+     "part": "Heat-shrink assortment",
+     "qty": "1 pack",
+     "purpose": "Insulate solder joints and strain-relieve wiring",
+     "est_cost_gbp": 4
+    },
+    {
+     "part": "Nyloc nuts, lock nuts or thread-lock for the rod",
+     "qty": "4 plus 1 tube",
+     "purpose": "Retain spring seats and foot on the threaded rod",
+     "est_cost_gbp": 5
+    },
+    {
+     "part": "Cable ties and double-sided foam tape",
+     "qty": "20 / 1 roll",
+     "purpose": "Secure the battery and loose wiring",
+     "est_cost_gbp": 4
+    },
+    {
+     "part": "Solder (60/40 or lead-free)",
+     "qty": "1 reel",
+     "purpose": "Perfboard and PCB joints",
+     "est_cost_gbp": 8
     }
    ],
    "build_steps": [
-    "Print the C-frame, spur gears, curved rack and linkage arms, then clean up the bores and gear teeth.",
-    "Assemble the Teensy and two driver breakouts on the custom PCB, then solder headers and JST-SH connectors.",
-    "Press pinions onto the N20 motor shafts and mount the motors, servo and brass motor in the frame.",
-    "Install the spur gears and curved rack on their axles and check that they mesh and turn freely.",
-    "Thread the rod through the leg, fit the compression and extension springs, then add the rubber foot and ball-tipped arms.",
-    "Wire the motors, encoders, servo and battery with the harness, add a regulator for the 5V rail, and fit a power switch.",
-    "Power up on the bench with the leg unloaded and test each motor's direction, encoder counts and servo travel.",
-    "Calibrate the spring load/release sequence in firmware with current limiting, then try low-energy hops on a tether."
+    "Print the frame, gears, rack and arms, then clean them and test-fit the bearings and shafts with a craft knife and files.",
+    "Press pinions onto the motor shafts and screw the N20 motors, brass motor and servo into the frame with M3/M2 screws and a hex key.",
+    "Solder headers and drivers to the carrier PCB, fit the 5V regulator and add a power switch.",
+    "Crimp or solder JST-SH cables for encoders and motors, then check polarity with a multimeter.",
+    "Mount the Teensy and carrier PCB on the frame with standoffs, and secure the battery with foam tape and cable ties.",
+    "Assemble the threaded rod, springs and foot, then retain them with nuts and thread-lock.",
+    "Bench-test each motor at low PWM with the leg unloaded, and verify encoder counts, direction and servo travel.",
+    "Tune the gear and rack mesh, then run the spring-load and release cycle slowly before attempting hops."
+   ],
+   "tools": [
+    {
+     "tool": "Soldering iron",
+     "purpose": "Solder the PCB, headers and wires",
+     "essential": true
+    },
+    {
+     "tool": "Multimeter",
+     "purpose": "Check rails, polarity and continuity",
+     "essential": true
+    },
+    {
+     "tool": "Hex keys and small screwdrivers",
+     "purpose": "M2/M3 fasteners",
+     "essential": true
+    },
+    {
+     "tool": "3D printer (FDM)",
+     "purpose": "Print the frame, gears and rack",
+     "essential": true
+    },
+    {
+     "tool": "JST-SH crimper",
+     "purpose": "Make the encoder and motor cables",
+     "essential": false
+    },
+    {
+     "tool": "Wire strippers and flush cutters",
+     "purpose": "Prepare wiring",
+     "essential": true
+    },
+    {
+     "tool": "Heat gun",
+     "purpose": "Shrink the heat-shrink",
+     "essential": false
+    },
+    {
+     "tool": "Soldering iron tip (for heat-set inserts)",
+     "purpose": "Install the inserts in printed parts",
+     "essential": false
+    }
    ],
    "inferred_parts": [
-    "5V buck regulator for the Teensy and servo",
-    "Power switch and inline fuse",
-    "Bulk capacitor near the servo and drivers",
-    "Decoupling capacitors",
-    "USB cable for programming",
-    "Limit switch or end stop for the rack",
-    "Latch or release mechanism for the spring (possibly the servo)"
+    "5V buck or linear regulator for the Teensy and servo",
+    "Power switch and fuse or polyfuse",
+    "Bulk capacitors (100-470uF) on the motor and servo rails",
+    "Bearings or brass bushings for gear shafts",
+    "Possible IMU (e.g. MPU6050) for hop control (assumption)",
+    "USB cable for programming the Teensy"
    ],
    "risks": [
-    "The 9V battery has high internal resistance and low current capability, so motor stall or servo load can brown out the Teensy; a LiPo pack would be better.",
-    "DRV8833/TB6612 drivers can overheat or limit current when a motor stalls while compressing the spring.",
-    "Printed gears, rack and axles can strip or creep under spring preload and impact on landing.",
-    "Loose wiring and JST-SH connectors can fatigue or detach from hop shock; strain relief is needed.",
-    "Spring-powered mechanisms can release energy suddenly, a pinch/impact hazard when tuning."
+    "A 9V battery has high internal resistance and low capacity, so motor stall or servo spikes can brown out the Teensy. Use a LiPo or separate rails.",
+    "DRV8833/TB6612 breakouts have current limits of about 1.2-1.5A, which may be exceeded at stall.",
+    "Printed gears and the rack can strip or wear under spring-loaded shock. Use thicker nylon or metal pinions.",
+    "Loose wiring near the moving gears and leg can snag or fatigue at solder joints."
    ]
   }
  },

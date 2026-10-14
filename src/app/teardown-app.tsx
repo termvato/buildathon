@@ -537,9 +537,79 @@ const kindStyle: Record<string, { label: string; cls: string }> = {
 
 function AssemblyView({ a }: { a: Assembly }) {
   const kinds = ["power", "data", "signal", "rf", "mechanical"].filter((k) => a.connections.some((c) => c.kind === k));
+  const fitting = a.fitting_parts ?? [];
+  const tools = a.tools ?? [];
+  const fittingTotal = fitting.reduce((n, f) => n + (f.est_cost_gbp ?? 0), 0);
   return (
     <div className="mt-3 space-y-6">
       <p className="max-w-3xl text-sm leading-relaxed text-neutral-300">{a.summary}</p>
+
+      {fitting.length > 0 && (
+        <div>
+          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-neutral-500">Parts to fit it together</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-neutral-500">
+                <tr>
+                  <th className="pb-2 font-medium">Part</th>
+                  <th className="pb-2 font-medium">Qty</th>
+                  <th className="pb-2 font-medium">Used for</th>
+                  <th className="pb-2 text-right font-medium">Est. £</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-800/70">
+                {fitting.map((f, i) => (
+                  <tr key={i} className="align-top">
+                    <td className="py-2 pr-3 font-medium">{f.part}</td>
+                    <td className="py-2 pr-3 tabular-nums text-neutral-300">{f.qty}</td>
+                    <td className="py-2 pr-3 text-neutral-400">{f.purpose}</td>
+                    <td className="py-2 text-right tabular-nums text-neutral-300">{f.est_cost_gbp != null ? gbp(f.est_cost_gbp) : "–"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {fittingTotal > 0 && (
+                <tfoot>
+                  <tr className="border-t border-neutral-700 font-semibold">
+                    <td className="pt-2" colSpan={3}>
+                      Fitting parts total (not in BOM above)
+                    </td>
+                    <td className="pt-2 text-right tabular-nums text-sky-300">{gbp(fittingTotal)}</td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Collapsible title="How to build" count={a.build_steps.length}>
+          <ol className="list-decimal space-y-1.5 pl-5 text-sm text-neutral-300 marker:text-neutral-600">
+            {a.build_steps.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ol>
+        </Collapsible>
+        {tools.length > 0 && (
+          <Collapsible title="Suggested tools" count={tools.length}>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {tools.map((t, i) => (
+                <li key={i} className="rounded-lg border border-neutral-800 p-2.5 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{t.tool}</span>
+                    {t.essential ? (
+                      <Badge className="border-sky-500/30 text-sky-300">Essential</Badge>
+                    ) : (
+                      <Badge className="border-neutral-700 text-neutral-500">Nice to have</Badge>
+                    )}
+                  </div>
+                  <div className="mt-0.5 text-xs text-neutral-400">{t.purpose}</div>
+                </li>
+              ))}
+            </ul>
+          </Collapsible>
+        )}
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div>
@@ -566,14 +636,6 @@ function AssemblyView({ a }: { a: Assembly }) {
         </div>
 
         <div className="space-y-6">
-          <div>
-            <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-neutral-500">Suggested build order</h4>
-            <ol className="list-decimal space-y-1.5 pl-5 text-sm text-neutral-300 marker:text-neutral-600">
-              {a.build_steps.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ol>
-          </div>
           {a.inferred_parts.length > 0 && (
             <div>
               <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-neutral-500">Probably also needed (not in photos)</h4>
@@ -599,6 +661,20 @@ function AssemblyView({ a }: { a: Assembly }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function Collapsible({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-xl border border-neutral-800 bg-neutral-950/40">
+      <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium hover:bg-neutral-900/60 [&::-webkit-details-marker]:hidden">
+        <span>
+          {title} <span className="text-neutral-500">({count})</span>
+        </span>
+        <span className="text-neutral-500 transition group-open:rotate-180">▾</span>
+      </summary>
+      <div className="border-t border-neutral-800 px-4 py-3">{children}</div>
+    </details>
   );
 }
 

@@ -20,7 +20,9 @@ const SYSTEM = `You are a hardware engineer explaining how a product fits togeth
 Given the photos, description and BOM, reason about the system architecture:
 - summary: 2-4 sentences: what the core subsystems are and how the device works end to end.
 - connections: the important links between BOM parts (use the BOM part names). kind = power (supply rails, include voltages), data (buses like I2C/SPI/UART/USB), signal (PWM, encoder, analog), mechanical (gears, fasteners, linkages), rf (antennas/radios). 6-14 connections, most important first.
-- build_steps: ordered steps to assemble and bring it up (for known products: how it is manufactured/assembled). 5-10 steps, each one sentence.
+- fitting_parts: the hardware and consumables needed to FIT THE BOM PARTS TOGETHER that are not already BOM lines: fasteners (e.g. "M3x8 socket screws"), standoffs, heat-set inserts, connectors and crimp terminals (e.g. "JST-SH 4-pin cables"), wire (gauge), solder, heat-shrink, adhesive/tape, thermal pads, cable ties. qty as text (e.g. "12", "~1m", "1 tube"). purpose = what it joins. est_cost_gbp = rough UK hobby price for that qty, or null. 5-12 items, most important first.
+- build_steps: ordered steps to assemble and bring it up (for known products: how it is manufactured/assembled). 5-10 steps, each one sentence, mentioning which fitting parts and tools each step uses.
+- tools: tools needed to build it (e.g. soldering iron, crimper for JST-SH, hex keys, 3D printer, multimeter, spudger, heat gun). essential=false for nice-to-haves. 4-10 items.
 - inferred_parts: parts the system almost certainly needs that are NOT in the BOM (e.g. a buck converter, fuse, level shifter, firmware programmer). Empty if none.
 - risks: likely failure points or design issues (current draw vs supply, heat, strain on wiring, MOQ/lead-time traps). 2-5 items.
 Be concrete and brief. Say when something is an assumption from the photos.`;

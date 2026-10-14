@@ -45,7 +45,11 @@ export const Assembly = z.object({
   connections: z.array(
     z.object({ from: z.string(), to: z.string(), kind: ConnectionKind, detail: z.string() }),
   ),
+  fitting_parts: z.array(
+    z.object({ part: z.string(), qty: z.string(), purpose: z.string(), est_cost_gbp: z.number().nullable() }),
+  ),
   build_steps: z.array(z.string()),
+  tools: z.array(z.object({ tool: z.string(), purpose: z.string(), essential: z.boolean() })),
   inferred_parts: z.array(z.string()),
   risks: z.array(z.string()),
 });

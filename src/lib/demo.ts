@@ -75,6 +75,13 @@ const airpods = teardown(
       { from: "Antennas + U1 chip", to: "H2 chip", kind: "rf", detail: "Bluetooth 5.3 to phone; UWB for Find My precision finding" },
       { from: "Enclosures, mesh, ear tips", to: "Driver + mic module", kind: "mechanical", detail: "Acoustic seals and mesh tune the vent and mic ports" },
     ],
+    fitting_parts: [
+      { part: "Pressure-sensitive adhesive + acoustic gaskets", qty: "per bud", purpose: "Seal driver chamber and bond stem halves", est_cost_gbp: null },
+      { part: "Flex-to-board connectors / hot-bar joints", qty: "3-4 per bud", purpose: "Join stem flex to logic board and battery", est_cost_gbp: null },
+      { part: "Pogo pins + charge contacts", qty: "2 per bud, 4 in case", purpose: "Case-to-bud charging", est_cost_gbp: null },
+      { part: "Hinge pin + lid magnets", qty: "1 set", purpose: "Case lid and lid-detect", est_cost_gbp: null },
+      { part: "Acoustic mesh", qty: "3 per bud", purpose: "Cover vent and mic ports", est_cost_gbp: null },
+    ],
     build_steps: [
       "SMT-assemble the flexible logic board with the H2 and sensors.",
       "Bond the driver and mic module into the acoustic chamber.",
@@ -83,7 +90,13 @@ const airpods = teardown(
       "Build the case: battery, charge coil, logic board and hinge.",
       "Pair-test buds and case, run ANC and acoustic calibration.",
     ],
-    inferred_parts: ["Adhesives and acoustic gaskets", "Hall sensor for lid detection"],
+    tools: [
+      { tool: "SMT line + reflow oven", purpose: "Logic boards (factory)", essential: true },
+      { tool: "Ultrasonic welder", purpose: "Seal earbud housings (factory)", essential: true },
+      { tool: "Acoustic test chamber", purpose: "ANC and driver calibration", essential: true },
+      { tool: "Heat gun + spudger + tweezers", purpose: "For a repair teardown: soften adhesive and open the case", essential: false },
+    ],
+    inferred_parts: ["Hall sensor for lid detection"],
     risks: ["Glued, welded enclosure makes battery replacement effectively impossible", "Button cells degrade first and set the product's lifespan"],
   },
   "AirPods Pro 2 teardown",
