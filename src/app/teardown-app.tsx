@@ -298,8 +298,8 @@ function methodLabel(m: string) {
 }
 
 function PhaseBar({ phase, images }: { phase: Phase; images: Img[] }) {
-  if (phase === "idle") return null;
   const real = images.filter((i) => !i.demo);
+  if (phase === "idle" || real.length === 0) return null;
   const analyzed = real.filter((i) => i.status === "done" || i.status === "error").length;
   const steps: [Phase, string][] = [
     ["analyzing", `Identify (${analyzed}/${real.length})`],
