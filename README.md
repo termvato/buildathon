@@ -42,6 +42,7 @@ Browser (Next.js client)
 
 - **Claude** is called through the official `@anthropic-ai/sdk` (`messages.parse` + Zod structured outputs). With `ANTHROPIC_API_KEY` set it talks to Anthropic directly; otherwise it is routed through **Vercel AI Gateway** (auth via Vercel OIDC on deploy). See `src/lib/claude.ts`.
 - **Embeddings:** `openai/text-embedding-3-small` (1536-d) via Vercel AI Gateway.
+- Full wiring (every service, route, auth path and collection): **[docs/CONNECTIONS.md](docs/CONNECTIONS.md)**.
 - **MongoDB Atlas** collections: `teardowns` (documents + `embedding`, vector index `vec_idx`), `tavily_cache` (unique on query). Indexes are created on first use (`src/lib/db.ts`).
 
 ## Run it locally
